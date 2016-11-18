@@ -1,0 +1,13 @@
+module master_m1 (input clk,data_in, valid_in, output  )
+always @ (posedge clk, posedge rst)
+
+endmodule
+
+module slave_s1 (input, output)
+
+always @ (poseedge clk)
+initial
+  begin
+  end
+endmodule
+

@@ -1,0 +1,4 @@
+class confi;
+  	static mailbox gen2bfm=new(); //mailbox for signals from generator to bfm/driver.
+    	static virtual intf vif;    //virtual interface with handle vif
+endclass

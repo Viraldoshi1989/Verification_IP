@@ -1,0 +1,16 @@
+// Generate transactions
+// Send it to the BFM through mailbox.
+class gen;
+   txn tx;
+	task run();
+     		tx = new();
+        	assert(tx.randomize() with {awaddr==32'h420707c9;wr_rd==WRITE;awlen==3;});
+        	tx.print("GENERATOR");
+		confi::gen2bfm.put(tx);	
+
+        	tx = new();
+        	assert(tx.randomize() with {araddr==32'h420707c9;wr_rd==READ;awlen==3;});
+        	tx.print("GENERATOR");
+		confi::gen2bfm.put(tx);	
+  	endtask 
+endclass

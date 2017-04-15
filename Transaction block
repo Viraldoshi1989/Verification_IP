@@ -1,0 +1,132 @@
+typedef enum {READ, WRITE} wr_rd_t; //enum data type
+
+class txn;
+
+//-------------------Write Control Signals---------------------------//
+
+ rand wr_rd_t 	      wr_rd;   // handle enum data type
+ rand bit 	[3:0] awlen;   // write address length
+ rand bit 	[1:0] awburst; // write address burst
+ rand bit 	[2:0] awsize;  // write address size
+ rand bit 	[3:0] awid;    // write address ID
+ rand bit 	[1:0] awlock;  // write address lock
+ rand bit 	[2:0] awprot;  // write address protectoin
+ rand bit 	[3:0] awcache; // write address cache
+ rand bit      [31:0] awaddr;  // write address address 
+
+//--------------------Write Data Channel-----------------------------//
+ 
+ rand bit      [31:0] wdata[$]; // size of WDATA should equal AWLEN+1
+ rand bit 	[3:0] wstrb;    // write strobe
+ rand bit 	[3:0] wid;      
+
+//------------------------Wrtie resp---------------------------------//
+ 
+      bit	[1:0] bresp;	// S to M
+      bit	[3:0] bid;	// tag to identify
+
+//--------------------Read Control Signals---------------------------//
+ 
+ rand bit 	[3:0] arlen;	// Read addr length
+ rand bit 	[1:0] arburst;	// Read addr burst
+ rand bit 	[2:0] arsize;	// Read addr size
+ rand bit 	[3:0] arid;
+ rand bit 	[1:0] arlock;
+ rand bit 	[2:0] arprot;
+ rand bit 	[3:0] arcache;
+ rand bit      [31:0] araddr;
+
+//-------------------Read Data Channel-------------------------------//
+ 
+      bit      [31:0] rdata[$]; // size of the wdata should be equal to awlen+1.
+      bit 	[1:0] rresp[$];
+      bit 	[3:0] rid;
+
+
+//==========================CONSTRAINTS==============================//
+
+
+//--------------AWSIZE [2:0] :- Depends on the data bus width-------//
+   // If WDATA is 32-bits then max value of awsize [2:0] <= 2 //
+   constraint awsize_c {
+      			awsize < 3;
+      			arsize < 3;
+    		       }
+
+//---------------AWBURST [1:0] :- 3 is reserved---------------------//
+
+   constraint awburst_c {
+     			 awburst < 3;
+			 arburst < 3;
+   			}
+
+//-----------------WID should be same as AWID----------------------//
+
+   constraint id_c {
+     		    awid == wid;
+   		   }
+
+//----------WDATA, RDATA size should be equal to AWLEN+1-----------//
+
+   constraint data_size_c {
+			   wdata.size() == (awlen+1);
+   			  }
+
+//-----------------WSTROBE depends on AWSIZE-----------------------//
+
+   constraint strb_c {
+     		      (awsize==0) -> (wstrb==4'b0001);
+     		      (awsize==1) -> (wstrb==4'b0011);
+     		      (awsize==2) -> (wstrb==4'b1111);
+     	             }
+
+//---AWBURST [1:0] = WRAP, address should be aligned with AWSIZE---//
+//---------------AWLEN should be 2,4,8,16 bit----------------------//
+
+   constraint wrap_c {
+        	     (awburst==2 && awsize==1) -> (awaddr[0]==0);   // 0, 1
+    		     (awburst==2 && awsize==2) -> (awaddr[1:0]==0); // 0,1,2,3
+		      awlen inside {1,3,7,15};
+     		     }
+ 
+//===========================FUNCTIONS=============================//
+
+ function void print(string str);
+   if (wr_rd==WRITE) 
+    	    begin
+		$display("Data at %s", str);    
+    	        $display("awaddr = %h", awaddr);
+    	    	$display("awsize = %h", awsize);
+     	    	$display("awlen = %h", awlen);
+    	    	$display("awburst = %h", awburst);
+    	    	$display("awprot = %h", awprot);
+    	    	$display("awlock = %h", awlock);
+    	    	$display("awcache = %h", awcache);
+    	    	$display("awid = %h", awid);
+    			foreach(wdata[i]) 
+    		       		begin
+      	    		    	    $display("wdata[%d] = %h", i, wdata[i]);
+    		       		end
+    	    	$display("wid = %h", wid);
+    	    	$display("wstrb = %h", wstrb);
+   	    end
+   else if (wr_rd==READ)
+	    begin
+		$display("Data at %s", str);    
+	    	$display("araddr = %h", araddr);
+	    	$display("arsize = %h", arsize);
+    	    	$display("arlen = %h", arlen);
+    	    	$display("arburst = %h", arburst);
+	    	$display("arprot = %h", arprot);
+	    	$display("arlock = %h", arlock);
+	    	$display("arcache = %h", arcache);
+	    	$display("arid = %h", arid);
+	        	foreach(rdata[i]) 
+		       		begin
+			    	    $display("rdata[%d] = %h", i, rdata[i]);
+		                end
+	    	$display("rid = %h", rid);
+	    end
+ endfunction
+
+endclass
